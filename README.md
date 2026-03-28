@@ -120,9 +120,3 @@ Profile image upload via Cloudinary
 📄 API Documentation
 
 Swagger OpenAPI documentation
-
-🏗 Architecture
-<img width="1080" height="500" alt="image" src="https://github.com/user-attachments/assets/77f53fa9-4702-46a4-8993-067e1cd98335" />
-<img width="1560" height="760" alt="image" src="https://github.com/user-attachments/assets/e9ea30e5-0ddb-4f53-a982-0a961e6bc9f6" />
-<img width="325" height="660" alt="image" src="https://github.com/user-attachments/assets/812fa508-1287-4db1-bcbf-809cdbdfd470" />
-<img width="1400" height="933" alt="image" src="https://github.com/user-attachments/assets/e37a7708-d8d5-44ee-bdb4-a92faae5db30" />
