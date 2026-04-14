@@ -4,9 +4,8 @@ import com.springboot.api.entity.users.User;
 import com.springboot.api.entity.transactions.Transaction;
 import com.springboot.api.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +13,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ExcelService {
@@ -28,24 +28,47 @@ public class ExcelService {
 
         try (Workbook workbook = new XSSFWorkbook();
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+
             Sheet sheet = workbook.createSheet("Transactions");
+
+            // Header styling
+            CellStyle headerStyle = workbook.createCellStyle();
+            Font headerFont = workbook.createFont();
+            headerFont.setBold(true);
+            headerStyle.setFont(headerFont);
+
             Row header = sheet.createRow(0);
-            header.createCell(0).setCellValue("Title");
-            header.createCell(1).setCellValue("Amount");
-            header.createCell(2).setCellValue("Type");
-            header.createCell(3).setCellValue("Date");
+            String[] columns = {"Title", "Amount", "Type", "Category", "Note", "Date"};
+            for (int i = 0; i < columns.length; i++) {
+                Cell cell = header.createCell(i);
+                cell.setCellValue(columns[i]);
+                cell.setCellStyle(headerStyle);
+            }
 
             int rowIdx = 1;
-
             for (Transaction t : transactions) {
                 Row row = sheet.createRow(rowIdx++);
-                row.createCell(0).setCellValue(t.getTitle());
-                row.createCell(1).setCellValue(t.getAmount());
-                row.createCell(2).setCellValue(t.getType().name());
-                row.createCell(3).setCellValue(t.getCreatedAt().toString());
+
+                // Null-safe cell generation
+                row.createCell(0).setCellValue(t.getTitle() != null ? t.getTitle() : "");
+                row.createCell(1).setCellValue(t.getAmount() != null ? t.getAmount() : 0.0);
+                row.createCell(2).setCellValue(t.getType() != null ? t.getType().name() : "UNKNOWN");
+                row.createCell(3).setCellValue(
+                        t.getCategory() != null && t.getCategory().getName() != null
+                                ? t.getCategory().getName() : "Uncategorized"
+                );
+                row.createCell(4).setCellValue(t.getNote() != null ? t.getNote() : "");
+                row.createCell(5).setCellValue(
+                        t.getCreatedAt() != null ? t.getCreatedAt().toString() : ""
+                );
             }
+
+            // Auto-size columns for readability
+            for (int i = 0; i < columns.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
             workbook.write(out);
-            workbook.close();
             return new ByteArrayInputStream(out.toByteArray());
         }
     }

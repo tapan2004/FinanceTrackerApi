@@ -345,4 +345,91 @@ public class TransactionService {
                 .map(this::toDto)
                 .toList();
     }
+
+    // DAILY SPENDING DATA FOR HEATMAP
+    public List<Map<String, Object>> getDailySpending(String email) {
+        User user = userService.findByEmail(email);
+        List<Transaction> transactions = transactionRepository.findByUser_UserId(user.getUserId());
+        
+        Map<String, Double> dailyMap = new LinkedHashMap<>();
+        for (Transaction t : transactions) {
+            if (t.getType() == TransactionType.EXPENSE && t.getCreatedAt() != null) {
+                String date = t.getCreatedAt().toLocalDate().toString();
+                dailyMap.merge(date, t.getAmount(), Double::sum);
+            }
+        }
+        
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Map.Entry<String, Double> entry : dailyMap.entrySet()) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("date", entry.getKey());
+            map.put("amount", entry.getValue());
+            result.add(map);
+        }
+        return result;
+    }
+
+    // FINANCIAL HEALTH SCORE (0-850)
+    public Map<String, Object> getFinancialHealthScore(String email) {
+        User user = userService.findByEmail(email);
+        Long userId = user.getUserId();
+
+        Double income = transactionRepository.getTotalIncome(userId);
+        Double expense = transactionRepository.getTotalExpense(userId);
+        if (income == null) income = 0.0;
+        if (expense == null) expense = 0.0;
+
+        // 1. Savings Rate Score (0-250): How much you save vs earn
+        double savingsRate = income > 0 ? ((income - expense) / income) * 100 : 0;
+        double savingsScore = Math.min(250, Math.max(0, savingsRate * 5));
+
+        // 2. Budget Adherence Score (0-250): Are you within budgets?
+        List<Budget> budgets = budgetRepository.findByUser_UserId(userId);
+        double budgetScore = 250; // Full marks if no budgets set
+        if (!budgets.isEmpty()) {
+            int withinBudget = 0;
+            for (Budget b : budgets) {
+                Double spent = transactionRepository.sumCategoryExpenseForMonth(
+                        userId, b.getCategory().getId(), b.getMonth(), b.getYear());
+                if (spent == null) spent = 0.0;
+                if (spent <= b.getLimitAmount()) withinBudget++;
+            }
+            budgetScore = ((double) withinBudget / budgets.size()) * 250;
+        }
+
+        // 3. Spending Consistency (0-200): Low variance = good
+        List<Double> monthlyTotals = transactionRepository.getMonthlyExpenseTotals(userId);
+        double consistencyScore = 200;
+        if (monthlyTotals.size() >= 2) {
+            double avg = monthlyTotals.stream().mapToDouble(Double::doubleValue).average().orElse(0);
+            double variance = monthlyTotals.stream().mapToDouble(v -> Math.pow(v - avg, 2)).average().orElse(0);
+            double stdDev = Math.sqrt(variance);
+            double cv = avg > 0 ? (stdDev / avg) * 100 : 0;
+            consistencyScore = Math.max(0, 200 - cv * 2);
+        }
+
+        // 4. Activity Score (0-150): Regular tracking
+        List<Transaction> all = transactionRepository.findByUser_UserId(userId);
+        double activityScore = Math.min(150, all.size() * 5.0);
+
+        double totalScore = Math.min(850, savingsScore + budgetScore + consistencyScore + activityScore);
+
+        String grade;
+        if (totalScore >= 750) grade = "Excellent";
+        else if (totalScore >= 600) grade = "Good";
+        else if (totalScore >= 400) grade = "Fair";
+        else if (totalScore >= 200) grade = "Needs Work";
+        else grade = "Critical";
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("score", Math.round(totalScore));
+        result.put("grade", grade);
+        result.put("maxScore", 850);
+        result.put("savingsScore", Math.round(savingsScore));
+        result.put("budgetScore", Math.round(budgetScore));
+        result.put("consistencyScore", Math.round(consistencyScore));
+        result.put("activityScore", Math.round(activityScore));
+        result.put("savingsRate", Math.round(savingsRate));
+        return result;
+    }
 }

@@ -174,4 +174,20 @@ public class TransactionController {
                 transactionService.getSuspiciousTransactions(auth.getName())
         );
     }
+
+    // DAILY SPENDING HEATMAP DATA
+    @GetMapping("/daily-spending")
+    public ResponseEntity<?> getDailySpending(Authentication auth) {
+        return ResponseEntity.ok(
+                transactionService.getDailySpending(auth.getName())
+        );
+    }
+
+    // FINANCIAL HEALTH SCORE
+    @GetMapping("/health-score")
+    public ResponseEntity<?> getHealthScore(Authentication auth) {
+        return ResponseEntity.ok(
+                transactionService.getFinancialHealthScore(auth.getName())
+        );
+    }
 }

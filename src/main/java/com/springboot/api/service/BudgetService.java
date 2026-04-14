@@ -64,12 +64,39 @@ public class BudgetService {
             if (totalExpense == null) totalExpense = 0.0;
 
             Map<String, Object> map = new HashMap<>();
+            map.put("id", budget.getId());
+            map.put("categoryId", budget.getCategory().getId());
             map.put("category", budget.getCategory().getName());
             map.put("budget", budget.getLimitAmount());
+            map.put("month", budget.getMonth());
+            map.put("year", budget.getYear());
             map.put("spent", totalExpense);
             map.put("remaining", budget.getLimitAmount() - totalExpense);
             result.add(map);
         }
         return result;
+    }
+
+    // UPDATE BUDGET
+    public Budget updateBudget(Long id, BudgetDto dto, String email) {
+        User user = userService.findByEmail(email);
+        Budget budget = budgetRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Budget not found"));
+        if (!budget.getUser().getUserId().equals(user.getUserId())) {
+            throw new RuntimeException("Unauthorized");
+        }
+        budget.setLimitAmount(dto.getLimitAmount());
+        return budgetRepository.save(budget);
+    }
+
+    // DELETE BUDGET
+    public void deleteBudget(Long id, String email) {
+        User user = userService.findByEmail(email);
+        Budget budget = budgetRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Budget not found"));
+        if (!budget.getUser().getUserId().equals(user.getUserId())) {
+            throw new RuntimeException("Unauthorized");
+        }
+        budgetRepository.delete(budget);
     }
 }

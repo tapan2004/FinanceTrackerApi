@@ -5,6 +5,7 @@ import com.springboot.api.entity.categories.Category;
 import com.springboot.api.entity.categories.CategoryType;
 import com.springboot.api.entity.users.User;
 import com.springboot.api.repository.CategoryRepository;
+import com.springboot.api.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +17,7 @@ public class CategoryService {
 
     private final UserService userService;
     private final CategoryRepository categoryRepository;
+    private final TransactionRepository transactionRepository;
 
     private Category toEntity(CategoryDto dto, User user) {
         return Category.builder()
@@ -27,6 +29,10 @@ public class CategoryService {
     }
 
     private CategoryDto toDto(Category category) {
+        Long userId = category.getUser().getUserId();
+        Long count = transactionRepository.countTransactionsByCategory(userId, category.getId());
+        Double total = transactionRepository.sumTransactionsByCategory(userId, category.getId());
+
         return CategoryDto.builder()
                 .id(category.getId())
                 .name(category.getName())
@@ -34,6 +40,8 @@ public class CategoryService {
                 .icon(category.getIcon())
                 .createdAt(category.getCreatedAt())
                 .updatedAt(category.getUpdatedAt())
+                .transactionCount(count != null ? count : 0L)
+                .totalAmount(total != null ? total : 0.0)
                 .build();
     }
 

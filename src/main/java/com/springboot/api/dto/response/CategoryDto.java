@@ -29,4 +29,8 @@ public class CategoryDto {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+
+    // Aggregation Fields
+    private Long transactionCount;
+    private Double totalAmount;
 }

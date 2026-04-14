@@ -110,4 +110,9 @@ public class UserService {
     public void save(User user) {
         userRepository.save(user);
     }
+
+    public UserResponse getUserProfile(String email) {
+        User user = findByEmail(email);
+        return mapToResponse(user);
+    }
 }

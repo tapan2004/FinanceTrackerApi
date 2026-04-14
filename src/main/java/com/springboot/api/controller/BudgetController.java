@@ -42,4 +42,26 @@ public class BudgetController {
                 budgetService.checkBudgets(email)
         );
     }
+
+    // UPDATE BUDGET
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateBudget(
+            @PathVariable Long id,
+            @RequestBody BudgetDto dto,
+            Authentication authentication) {
+        String email = authentication.getName();
+        return ResponseEntity.ok(
+                budgetService.updateBudget(id, dto, email)
+        );
+    }
+
+    // DELETE BUDGET
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteBudget(
+            @PathVariable Long id,
+            Authentication authentication) {
+        String email = authentication.getName();
+        budgetService.deleteBudget(id, email);
+        return ResponseEntity.ok("Budget deleted successfully");
+    }
 }
