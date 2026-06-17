@@ -51,6 +51,12 @@ public class User {
     @Column(name = "verification_expiry")
     private LocalDateTime activationTokenExpiry;
 
+    @Column(name = "reset_token")
+    private String resetToken;
+
+    @Column(name = "reset_token_expiry")
+    private LocalDateTime resetTokenExpiry;
+
     private String profileImageUrl;
 
     @CreationTimestamp

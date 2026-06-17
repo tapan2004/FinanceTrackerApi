@@ -20,4 +20,14 @@ public class AuthController {
     public String resend(@RequestParam String email) {
         return authService.resendVerification(email);
     }
+
+    @PostMapping("/forgot-password")
+    public String forgotPassword(@RequestParam String email) {
+        return authService.forgotPassword(email);
+    }
+
+    @PostMapping("/reset-password")
+    public String resetPassword(@RequestParam String token, @RequestParam String newPassword) {
+        return authService.resetPassword(token, newPassword);
+    }
 }

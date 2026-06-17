@@ -57,9 +57,13 @@ public class UserController {
 
             String jwt = jwtUtils.generateToken(userDetails);
             return ResponseEntity.ok(jwt);
+        } catch (org.springframework.security.authentication.DisabledException e) {
+            return new ResponseEntity<>("Account not activated. Please verify your email.", HttpStatus.FORBIDDEN);
+        } catch (org.springframework.security.authentication.BadCredentialsException e) {
+            return new ResponseEntity<>("Invalid email or password.", HttpStatus.UNAUTHORIZED);
         } catch (Exception e) {
             log.error("Login error {}", e.getMessage());
-            return new ResponseEntity<>("Invalid Username or Password", HttpStatus.UNAUTHORIZED);
+            return new ResponseEntity<>("An internal error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
